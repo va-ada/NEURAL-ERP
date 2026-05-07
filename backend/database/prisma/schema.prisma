@@ -1,0 +1,806 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ──────────────────────────────────────────────
+
+enum Role {
+  SUPER_ADMIN
+  ADMIN
+  FACULTY
+  STUDENT
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  LATE
+  EXCUSED
+}
+
+enum AssignmentStatus {
+  DRAFT
+  PUBLISHED
+  CLOSED
+}
+
+enum Day {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  SUNDAY
+}
+
+enum FeeStatus {
+  PENDING
+  PAID
+  OVERDUE
+  WAIVED
+}
+
+enum FeeType {
+  TUITION
+  EXAM
+  LIBRARY
+  LAB
+  OTHER
+}
+
+enum BookStatus {
+  AVAILABLE
+  ISSUED
+  RESERVED
+  LOST
+}
+
+enum NotificationType {
+  INFO
+  SUCCESS
+  WARNING
+  ALERT
+}
+
+enum AnnouncementPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+enum ExamType {
+  MIDTERM
+  ENDTERM
+  QUIZ
+  PRACTICAL
+  VIVA
+}
+
+enum SlotType {
+  LECTURE
+  LAB
+  TUTORIAL
+  LUNCH
+  FREE
+}
+
+// ─── Institution ────────────────────────────────────────
+
+model Institution {
+  id        String   @id @default(uuid())
+  name      String
+  code      String   @unique
+  address   String?
+  phone     String?
+  email     String?
+  logo      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users       User[]
+  departments Department[]
+  batches     Batch[]
+
+  @@map("institutions")
+}
+
+// ─── User ───────────────────────────────────────────────
+
+model User {
+  id            String      @id @default(uuid())
+  email         String      @unique
+  password      String
+  name          String
+  role          Role        @default(STUDENT)
+  isActive      Boolean     @default(true)
+  institutionId String
+  institution   Institution @relation(fields: [institutionId], references: [id])
+
+  // 2FA
+  twoFactorCode   String?
+  twoFactorExpiry DateTime?
+
+  // Refresh token
+  refreshToken String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  student       Student?
+  faculty       Faculty?
+  notifications Notification[]
+  announcements Announcement[]
+  auditLogs     AuditLog[]
+
+  @@index([email])
+  @@index([institutionId])
+  @@map("users")
+}
+
+// ─── Student ────────────────────────────────────────────
+
+model Student {
+  id                 String     @id @default(uuid())
+  userId             String     @unique
+  user               User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rollNumber         String
+  phone              String?
+  section            String?
+  semester           Int        @default(1)
+  departmentId       String
+  department         Department @relation(fields: [departmentId], references: [id])
+  batchId            String
+  batch              Batch      @relation(fields: [batchId], references: [id])
+  avatarInitial      String?
+  avatarColor        String?
+  workModePreference String?
+  rolePreference     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  attendances        Attendance[]
+  submissions        Submission[]
+  grades             Grade[]
+  semesterResults    SemesterResult[]
+  careerApplications CareerApplication[]
+  skills             StudentSkill[]
+  noteFolders        NoteFolder[]
+  fees               Fee[]
+  bookIssues         BookIssue[]
+  forumPosts         ForumPost[]
+  forumReplies       ForumReply[]
+  predictions        Prediction[]
+
+  @@unique([rollNumber, departmentId])
+  @@index([departmentId])
+  @@index([batchId])
+  @@map("students")
+}
+
+// ─── Faculty ────────────────────────────────────────────
+
+model Faculty {
+  id           String     @id @default(uuid())
+  userId       String     @unique
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  employeeId   String     @unique
+  phone        String?
+  designation  String?
+  room         String?
+  rating       Float?     @default(0)
+  departmentId String
+  department   Department @relation("FacultyDepartment", fields: [departmentId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  hodOf           Department?      @relation("HOD")
+  facultySubjects FacultySubject[]
+  attendances     Attendance[]
+  timetableSlots  TimetableSlot[]
+  assignments     Assignment[]
+
+  @@index([departmentId])
+  @@map("faculty")
+}
+
+// ─── Department ─────────────────────────────────────────
+
+model Department {
+  id            String      @id @default(uuid())
+  name          String
+  code          String
+  institutionId String
+  institution   Institution @relation(fields: [institutionId], references: [id])
+  hodId         String?     @unique
+  hod           Faculty?    @relation("HOD", fields: [hodId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  students Student[]
+  faculty  Faculty[] @relation("FacultyDepartment")
+  subjects Subject[]
+  batches  Batch[]
+
+  @@unique([code, institutionId])
+  @@index([institutionId])
+  @@map("departments")
+}
+
+// ─── Subject ────────────────────────────────────────────
+
+model Subject {
+  id           String     @id @default(uuid())
+  name         String
+  code         String
+  shortName    String?
+  credits      Int        @default(3)
+  semester     Int
+  departmentId String
+  department   Department @relation(fields: [departmentId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  facultySubjects FacultySubject[]
+  attendances     Attendance[]
+  timetableSlots  TimetableSlot[]
+  assignments     Assignment[]
+  grades          Grade[]
+  exams           Exam[]
+
+  @@unique([code, departmentId])
+  @@index([departmentId])
+  @@map("subjects")
+}
+
+// ─── Batch ──────────────────────────────────────────────
+
+model Batch {
+  id              String      @id @default(uuid())
+  name            String
+  year            Int
+  currentSemester Int         @default(1)
+  departmentId    String
+  department      Department  @relation(fields: [departmentId], references: [id])
+  institutionId   String
+  institution     Institution @relation(fields: [institutionId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  students        Student[]
+  facultySubjects FacultySubject[]
+  attendances     Attendance[]
+  timetableSlots  TimetableSlot[]
+  assignments     Assignment[]
+  exams           Exam[]
+
+  @@unique([name, departmentId])
+  @@index([departmentId])
+  @@index([institutionId])
+  @@map("batches")
+}
+
+// ─── Faculty ↔ Subject ↔ Batch (Teaching Assignment) ────
+
+model FacultySubject {
+  id        String  @id @default(uuid())
+  facultyId String
+  faculty   Faculty @relation(fields: [facultyId], references: [id])
+  subjectId String
+  subject   Subject @relation(fields: [subjectId], references: [id])
+  batchId   String
+  batch     Batch   @relation(fields: [batchId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@unique([facultyId, subjectId, batchId])
+  @@map("faculty_subjects")
+}
+
+// ─── Attendance ─────────────────────────────────────────
+
+model Attendance {
+  id        String           @id @default(uuid())
+  studentId String
+  student   Student          @relation(fields: [studentId], references: [id])
+  subjectId String
+  subject   Subject          @relation(fields: [subjectId], references: [id])
+  facultyId String
+  faculty   Faculty          @relation(fields: [facultyId], references: [id])
+  batchId   String
+  batch     Batch            @relation(fields: [batchId], references: [id])
+  date      DateTime         @db.Date
+  status    AttendanceStatus @default(PRESENT)
+  remarks   String?
+  markedAt  DateTime         @default(now())
+
+  @@unique([studentId, subjectId, date])
+  @@index([batchId, subjectId, date])
+  @@index([studentId, date])
+  @@map("attendances")
+}
+
+// ─── Timetable ──────────────────────────────────────────
+
+model TimetableSlot {
+  id        String   @id @default(uuid())
+  batchId   String
+  batch     Batch    @relation(fields: [batchId], references: [id])
+  subjectId String
+  subject   Subject  @relation(fields: [subjectId], references: [id])
+  facultyId String
+  faculty   Faculty  @relation(fields: [facultyId], references: [id])
+  day       Day
+  startTime String // "09:00"
+  endTime   String // "10:00"
+  room      String?
+  type      SlotType @default(LECTURE)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([batchId, day, startTime])
+  @@unique([facultyId, day, startTime])
+  @@index([batchId, day])
+  @@map("timetable_slots")
+}
+
+// ─── Assignment ─────────────────────────────────────────
+
+model Assignment {
+  id          String           @id @default(uuid())
+  title       String
+  description String?
+  subjectId   String
+  subject     Subject          @relation(fields: [subjectId], references: [id])
+  facultyId   String
+  faculty     Faculty          @relation(fields: [facultyId], references: [id])
+  batchId     String
+  batch       Batch            @relation(fields: [batchId], references: [id])
+  dueDate     DateTime
+  maxMarks    Int              @default(100)
+  fileUrl     String?
+  status      AssignmentStatus @default(DRAFT)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  submissions Submission[]
+
+  @@index([batchId, subjectId])
+  @@index([facultyId])
+  @@map("assignments")
+}
+
+// ─── Submission ─────────────────────────────────────────
+
+model Submission {
+  id           String     @id @default(uuid())
+  assignmentId String
+  assignment   Assignment @relation(fields: [assignmentId], references: [id])
+  studentId    String
+  student      Student    @relation(fields: [studentId], references: [id])
+  fileUrl      String?
+  remarks      String?
+  marks        Int?
+  feedback     String?
+  gradedAt     DateTime?
+  submittedAt  DateTime   @default(now())
+
+  @@unique([assignmentId, studentId])
+  @@index([assignmentId])
+  @@index([studentId])
+  @@map("submissions")
+}
+
+// ─── Grade ──────────────────────────────────────────────
+
+model Grade {
+  id        String  @id @default(uuid())
+  studentId String
+  student   Student @relation(fields: [studentId], references: [id])
+  subjectId String
+  subject   Subject @relation(fields: [subjectId], references: [id])
+  semester  Int
+  grade     String // A+, A, B+, B, C, etc.
+  points    Int // 10, 9, 8, 7, 6
+  credits   Int
+
+  createdAt DateTime @default(now())
+
+  @@unique([studentId, subjectId, semester])
+  @@index([studentId, semester])
+  @@map("grades")
+}
+
+// ─── Semester Result ────────────────────────────────────
+
+model SemesterResult {
+  id            String  @id @default(uuid())
+  studentId     String
+  student       Student @relation(fields: [studentId], references: [id])
+  semester      Int
+  sgpa          Float
+  cgpa          Float
+  creditsEarned Int
+  rank          Int?
+  totalStudents Int?
+  deptRank      Int?
+  deptTotal     Int?
+
+  createdAt DateTime @default(now())
+
+  @@unique([studentId, semester])
+  @@index([studentId])
+  @@map("semester_results")
+}
+
+// ─── Exam ───────────────────────────────────────────────
+
+model Exam {
+  id        String   @id @default(uuid())
+  subjectId String
+  subject   Subject  @relation(fields: [subjectId], references: [id])
+  batchId   String
+  batch     Batch    @relation(fields: [batchId], references: [id])
+  type      ExamType @default(ENDTERM)
+  date      DateTime @db.Date
+  startTime String
+  endTime   String
+  room      String?
+  maxMarks  Int      @default(100)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([batchId, date])
+  @@map("exams")
+}
+
+// ─── Career Opportunity ─────────────────────────────────
+
+model CareerOpportunity {
+  id         String   @id @default(uuid())
+  company    String
+  initial    String?
+  color      String?
+  role       String
+  location   String
+  type       String // "Internship", "Full Time"
+  deadline   DateTime
+  matchScore Int?     @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  applications CareerApplication[]
+
+  @@map("career_opportunities")
+}
+
+// ─── Career Event ───────────────────────────────────────
+
+model CareerEvent {
+  id    String   @id @default(uuid())
+  name  String
+  date  DateTime
+  time  String
+  venue String
+
+  createdAt DateTime @default(now())
+
+  @@map("career_events")
+}
+
+// ─── Career Application ─────────────────────────────────
+
+model CareerApplication {
+  id            String            @id @default(uuid())
+  studentId     String
+  student       Student           @relation(fields: [studentId], references: [id])
+  opportunityId String
+  opportunity   CareerOpportunity @relation(fields: [opportunityId], references: [id])
+  status        String // "Under Review", "Interview Scheduled", "Offer Received", "Rejected"
+  statusClass   String? // CSS class hint
+  appliedAt     DateTime          @default(now())
+
+  @@unique([studentId, opportunityId])
+  @@index([studentId])
+  @@map("career_applications")
+}
+
+// ─── Student Skill ──────────────────────────────────────
+
+model StudentSkill {
+  id         String  @id @default(uuid())
+  studentId  String
+  student    Student @relation(fields: [studentId], references: [id])
+  name       String
+  percentage Int     @default(0)
+  level      String // "beginner", "intermediate", "advanced"
+
+  createdAt DateTime @default(now())
+
+  @@unique([studentId, name])
+  @@index([studentId])
+  @@map("student_skills")
+}
+
+// ─── Note Folder ────────────────────────────────────────
+
+model NoteFolder {
+  id        String  @id @default(uuid())
+  studentId String
+  student   Student @relation(fields: [studentId], references: [id])
+  name      String
+  icon      String? @default("📁")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  notes Note[]
+
+  @@unique([studentId, name])
+  @@index([studentId])
+  @@map("note_folders")
+}
+
+// ─── Note ───────────────────────────────────────────────
+
+model Note {
+  id         String     @id @default(uuid())
+  folderId   String
+  folder     NoteFolder @relation(fields: [folderId], references: [id])
+  title      String
+  content    String?
+  subject    String?
+  bookmarked Boolean    @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  sharedNotes SharedNote[]
+
+  @@index([folderId])
+  @@map("notes")
+}
+
+// ─── Shared Note ────────────────────────────────────────
+
+model SharedNote {
+  id              String  @id @default(uuid())
+  noteId          String
+  note            Note    @relation(fields: [noteId], references: [id])
+  sharedById      String
+  sharedWithId    String
+  sharedByName    String?
+  sharedByInitial String?
+  sharedByColor   String?
+
+  createdAt DateTime @default(now())
+
+  @@unique([noteId, sharedWithId])
+  @@map("shared_notes")
+}
+
+// ─── Smartboard Note ─────────────────────────────────────
+
+model SmartboardNote {
+  id         String  @id @default(uuid())
+  title      String
+  subject    String
+  batchId    String?
+  uploadedBy String
+  fileName   String
+  fileUrl    String
+  fileSize   Int?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([batchId])
+  @@map("smartboard_notes")
+}
+
+// ─── Fee ────────────────────────────────────────────────
+
+model Fee {
+  id        String    @id @default(uuid())
+  studentId String
+  student   Student   @relation(fields: [studentId], references: [id])
+  type      FeeType   @default(TUITION)
+  label     String // "Tuition Fee - Semester 6"
+  amount    Float
+  semester  Int
+  dueDate   DateTime
+  status    FeeStatus @default(PENDING)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  payments Payment[]
+
+  @@index([studentId])
+  @@map("fees")
+}
+
+// ─── Payment ────────────────────────────────────────────
+
+model Payment {
+  id            String   @id @default(uuid())
+  feeId         String
+  fee           Fee      @relation(fields: [feeId], references: [id])
+  amount        Float
+  method        String? // "UPI", "Card", "Net Banking"
+  transactionId String?
+  paidAt        DateTime @default(now())
+
+  @@index([feeId])
+  @@map("payments")
+}
+
+// ─── Library Book ───────────────────────────────────────
+
+model LibraryBook {
+  id         String     @id @default(uuid())
+  title      String
+  author     String
+  isbn       String?    @unique
+  category   String?
+  publisher  String?
+  year       Int?
+  copies     Int        @default(1)
+  available  Int        @default(1)
+  status     BookStatus @default(AVAILABLE)
+  coverColor String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  issues BookIssue[]
+
+  @@map("library_books")
+}
+
+// ─── Book Issue ─────────────────────────────────────────
+
+model BookIssue {
+  id         String      @id @default(uuid())
+  bookId     String
+  book       LibraryBook @relation(fields: [bookId], references: [id])
+  studentId  String
+  student    Student     @relation(fields: [studentId], references: [id])
+  issuedAt   DateTime    @default(now())
+  dueDate    DateTime
+  returnedAt DateTime?
+  fine       Float?      @default(0)
+
+  @@index([studentId])
+  @@index([bookId])
+  @@map("book_issues")
+}
+
+// ─── Forum Post ─────────────────────────────────────────
+
+model ForumPost {
+  id        String  @id @default(uuid())
+  studentId String
+  student   Student @relation(fields: [studentId], references: [id])
+  title     String
+  content   String
+  category  String? // "General", "Academic", "Technical"
+  likes     Int     @default(0)
+  pinned    Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  replies ForumReply[]
+
+  @@index([studentId])
+  @@map("forum_posts")
+}
+
+// ─── Forum Reply ────────────────────────────────────────
+
+model ForumReply {
+  id        String    @id @default(uuid())
+  postId    String
+  post      ForumPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  studentId String
+  student   Student   @relation(fields: [studentId], references: [id])
+  content   String
+  likes     Int       @default(0)
+
+  createdAt DateTime @default(now())
+
+  @@index([postId])
+  @@map("forum_replies")
+}
+
+// ─── Notification ───────────────────────────────────────
+
+model Notification {
+  id     String           @id @default(uuid())
+  userId String
+  user   User             @relation(fields: [userId], references: [id])
+  icon   String?
+  type   NotificationType @default(INFO)
+  text   String
+  read   Boolean          @default(false)
+
+  createdAt DateTime @default(now())
+
+  @@index([userId, read])
+  @@map("notifications")
+}
+
+// ─── Announcement ───────────────────────────────────────
+
+model Announcement {
+  id        String               @id @default(uuid())
+  title     String
+  content   String
+  priority  AnnouncementPriority @default(NORMAL)
+  createdBy String
+  author    User                 @relation(fields: [createdBy], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("announcements")
+}
+
+// ─── Audit Log ──────────────────────────────────────────
+
+model AuditLog {
+  id       String  @id @default(uuid())
+  userId   String
+  user     User    @relation(fields: [userId], references: [id])
+  action   String // "CREATE", "UPDATE", "DELETE"
+  entity   String // "Student", "Faculty", "Assignment", etc.
+  entityId String?
+  details  String?
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+// ─── Predictions (ML service output cache) ──────────────
+
+enum PredictionType {
+  DROPOUT_RISK
+  PLACEMENT_PROBABILITY
+}
+
+model Prediction {
+  id           String         @id @default(uuid())
+  studentId    String
+  student      Student        @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  type         PredictionType
+  score        Float // 0-100 (probability or risk score)
+  confidence   Float // 0-1
+  factors      Json // top contributing features [{ name, weight }]
+  dataMode     String // 'demo' | 'live'
+  modelVersion String // e.g. 'dropout_v1'
+
+  generatedAt DateTime @default(now())
+
+  @@index([studentId, type, generatedAt])
+  @@index([type, generatedAt])
+  @@map("predictions")
+}

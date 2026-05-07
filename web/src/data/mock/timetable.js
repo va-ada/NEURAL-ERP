@@ -1,0 +1,66 @@
+// ============================================================
+// Timetable (shared across all AIML students)
+// ============================================================
+
+export const timetable = {
+    Mon: [
+        { time: '9:00 - 10:00', subject: 'Machine Learning', prof: 'Prof. Amit Verma', room: 'Room 305', type: 'lecture' },
+        { time: '10:00 - 11:00', subject: 'Deep Learning Lab', prof: 'Dr. Priya Sharma', room: 'Lab 401', type: 'lab' },
+        { time: '11:00 - 12:00', subject: 'Data Structures & Algorithms', prof: 'Dr. Rahul Mehta', room: 'Room 301', type: 'lecture' },
+        { time: '12:00 - 1:00', subject: 'Lunch Break', type: 'lunch' },
+        { time: '1:00 - 2:00', subject: 'Natural Language Processing', prof: 'Dr. Sarah Johnson', room: 'Room 201', type: 'lecture' },
+        { time: '2:00 - 3:00', subject: 'Computer Vision Lab', prof: 'Prof. Rajesh Kumar', room: 'Lab 102', type: 'lab' },
+        { time: '3:00 - 4:00', subject: 'Free Period', type: 'free' },
+        { time: '4:00 - 5:00', subject: 'Probability & Statistics Tutorial', prof: 'Prof. Neha Singh', room: 'Room 201', type: 'tutorial' },
+    ],
+    Tue: [
+        { time: '9:00 - 10:00', subject: 'Deep Learning', prof: 'Dr. Priya Sharma', room: 'Room 402', type: 'lecture' },
+        { time: '10:00 - 11:00', subject: 'Computer Vision', prof: 'Prof. Rajesh Kumar', room: 'Room 301', type: 'lecture' },
+        { time: '11:00 - 12:00', subject: 'Machine Learning Lab', prof: 'Prof. Amit Verma', room: 'Lab 301', type: 'lab' },
+        { time: '12:00 - 1:00', subject: 'Lunch Break', type: 'lunch' },
+        { time: '1:00 - 2:00', subject: 'Probability & Statistics', prof: 'Prof. Neha Singh', room: 'Room 201', type: 'lecture' },
+        { time: '2:00 - 3:00', subject: 'DSA Tutorial', prof: 'Dr. Rahul Mehta', room: 'Room 301', type: 'tutorial' },
+        { time: '3:00 - 4:00', subject: 'Free Period', type: 'free' },
+        { time: '4:00 - 5:00', subject: 'NLP Lab', prof: 'Dr. Sarah Johnson', room: 'Lab 202', type: 'lab' },
+    ],
+    Wed: [
+        { time: '9:00 - 10:00', subject: 'Natural Language Processing', prof: 'Dr. Sarah Johnson', room: 'Room 201', type: 'lecture' },
+        { time: '10:00 - 11:00', subject: 'Machine Learning', prof: 'Prof. Amit Verma', room: 'Room 305', type: 'lecture' },
+        { time: '11:00 - 12:00', subject: 'Free Period', type: 'free' },
+        { time: '12:00 - 1:00', subject: 'Lunch Break', type: 'lunch' },
+        { time: '1:00 - 2:00', subject: 'Deep Learning Lab', prof: 'Dr. Priya Sharma', room: 'Lab 401', type: 'lab' },
+        { time: '2:00 - 3:00', subject: 'Computer Vision', prof: 'Prof. Rajesh Kumar', room: 'Room 301', type: 'lecture' },
+        { time: '3:00 - 4:00', subject: 'Probability & Statistics', prof: 'Prof. Neha Singh', room: 'Room 201', type: 'lecture' },
+        { time: '4:00 - 5:00', subject: 'DSA Lab', prof: 'Dr. Rahul Mehta', room: 'Lab 102', type: 'lab' },
+    ],
+    Thu: [
+        { time: '9:00 - 10:00', subject: 'Data Structures & Algorithms', prof: 'Dr. Rahul Mehta', room: 'Room 301', type: 'lecture' },
+        { time: '10:00 - 11:00', subject: 'Computer Vision Lab', prof: 'Prof. Rajesh Kumar', room: 'Lab 102', type: 'lab' },
+        { time: '11:00 - 12:00', subject: 'Deep Learning', prof: 'Dr. Priya Sharma', room: 'Room 402', type: 'lecture' },
+        { time: '12:00 - 1:00', subject: 'Lunch Break', type: 'lunch' },
+        { time: '1:00 - 2:00', subject: 'Free Period', type: 'free' },
+        { time: '2:00 - 3:00', subject: 'Machine Learning Lab', prof: 'Prof. Amit Verma', room: 'Lab 301', type: 'lab' },
+        { time: '3:00 - 4:00', subject: 'Natural Language Processing', prof: 'Dr. Sarah Johnson', room: 'Room 201', type: 'lecture' },
+        { time: '4:00 - 5:00', subject: 'P&S Tutorial', prof: 'Prof. Neha Singh', room: 'Room 201', type: 'tutorial' },
+    ],
+    Fri: [
+        { time: '9:00 - 10:00', subject: 'Probability & Statistics', prof: 'Prof. Neha Singh', room: 'Room 201', type: 'lecture' },
+        { time: '10:00 - 11:00', subject: 'NLP Lab', prof: 'Dr. Sarah Johnson', room: 'Lab 202', type: 'lab' },
+        { time: '11:00 - 12:00', subject: 'Data Structures & Algorithms', prof: 'Dr. Rahul Mehta', room: 'Room 301', type: 'lecture' },
+        { time: '12:00 - 1:00', subject: 'Lunch Break', type: 'lunch' },
+        { time: '1:00 - 2:00', subject: 'Machine Learning', prof: 'Prof. Amit Verma', room: 'Room 305', type: 'lecture' },
+        { time: '2:00 - 3:00', subject: 'Deep Learning', prof: 'Dr. Priya Sharma', room: 'Room 402', type: 'lecture' },
+        { time: '3:00 - 4:00', subject: 'Free Period', type: 'free' },
+        { time: '4:00 - 5:00', subject: 'CV Tutorial', prof: 'Prof. Rajesh Kumar', room: 'Room 301', type: 'tutorial' },
+    ],
+    Sat: [
+        { time: '9:00 - 10:00', subject: 'Computer Vision', prof: 'Prof. Rajesh Kumar', room: 'Room 301', type: 'lecture' },
+        { time: '10:00 - 11:00', subject: 'Deep Learning', prof: 'Dr. Priya Sharma', room: 'Room 402', type: 'lecture' },
+        { time: '11:00 - 12:00', subject: 'ML Tutorial', prof: 'Prof. Amit Verma', room: 'Room 305', type: 'tutorial' },
+        { time: '12:00 - 1:00', subject: 'Lunch Break', type: 'lunch' },
+        { time: '1:00 - 2:00', subject: 'Free Period', type: 'free' },
+        { time: '2:00 - 3:00', subject: 'Free Period', type: 'free' },
+        { time: '3:00 - 4:00', subject: 'Free Period', type: 'free' },
+        { time: '4:00 - 5:00', subject: 'Free Period', type: 'free' },
+    ],
+}

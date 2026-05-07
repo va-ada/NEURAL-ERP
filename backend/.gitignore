@@ -1,0 +1,17 @@
+node_modules/
+*.log
+logs/
+.env
+.env.local
+.env.production
+
+# Python (ml-service)
+services/ml-service/venv/
+services/ml-service/.venv/
+services/ml-service/__pycache__/
+services/ml-service/**/__pycache__/
+services/ml-service/.pytest_cache/
+services/ml-service/tests/_test_models/
+services/ml-service/data/synthetic_v1.csv
+services/ml-service/models/*.joblib
+*.pyc

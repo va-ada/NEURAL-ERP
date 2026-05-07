@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "neural-erp-ml-service"
+version = "0.1.0"
+description = "ML microservice for the Neural ERP monorepo (dropout risk + placement probability)."
+requires-python = ">=3.11"
+authors = [{ name = "Neural ERP" }]
+readme = "README.md"
+license = { text = "MIT" }
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["src*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

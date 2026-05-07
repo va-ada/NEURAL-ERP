@@ -1,0 +1,36 @@
+{
+  "name": "neural-erp-backend",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "api-gateway",
+    "services/*"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev --workspace=api-gateway\" \"npm run dev --workspace=services/auth-service\" \"npm run dev --workspace=services/academic-service\" \"npm run dev --workspace=services/attendance-service\" \"npm run dev --workspace=services/timetable-service\" \"npm run dev --workspace=services/assignment-service\" \"npm run dev --workspace=services/grade-service\" \"npm run dev --workspace=services/career-service\" \"npm run dev --workspace=services/notes-service\" \"npm run dev --workspace=services/fee-service\" \"npm run dev --workspace=services/library-service\" \"npm run dev --workspace=services/forum-service\" \"npm run dev --workspace=services/notification-service\" \"npm run dev --workspace=services/admin-service\"",
+    "dev:ml": "cd services/ml-service && (test -d venv || python3 -m venv venv) && source venv/bin/activate && pip install -q -r requirements.txt && uvicorn src.main:app --port 3014 --reload",
+    "db:migrate": "npx prisma migrate dev --schema=./database/prisma/schema.prisma",
+    "db:generate": "npx prisma generate --schema=./database/prisma/schema.prisma",
+    "db:seed": "node database/seed.js",
+    "db:reset": "npx prisma migrate reset --schema=./database/prisma/schema.prisma --force",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "start": "bash start.sh",
+    "test": "jest --forceExit --detectOpenHandles",
+    "lint": "eslint . --ext .js --ignore-path .gitignore"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "jest": "^30.3.0",
+    "supertest": "^7.2.2"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.22.0",
+    "bcryptjs": "^2.4.3",
+    "dotenv": "^16.4.5",
+    "express-validator": "^7.0.1",
+    "ioredis": "^5.4.1",
+    "prisma": "^5.22.0",
+    "winston": "^3.19.0"
+  }
+}

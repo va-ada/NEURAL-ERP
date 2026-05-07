@@ -1,0 +1,22 @@
+# Pinned versions actually installed and tested in this repo.
+#
+# Important context for contributors:
+#   - Local dev was performed on Python 3.14.2 (the only Python on the dev machine).
+#     scikit-learn 1.8.0 + pydantic 2.13.3 ship 3.14 wheels, so no compile required.
+#   - The Dockerfile pins python:3.11-slim, where these versions also have wheels.
+#   - If you must run on Python 3.11/3.12 locally, these versions still work.
+#     If pip refuses scikit-learn 1.8 on your platform, fall back to scikit-learn==1.5.2
+#     which has 3.11/3.12/3.13 wheels but NOT 3.14.
+fastapi==0.136.1
+uvicorn[standard]==0.46.0
+pydantic==2.13.3
+pydantic-settings==2.14.0
+python-multipart==0.0.27
+httpx==0.28.1
+joblib==1.5.3
+numpy==2.4.4
+pandas==3.0.2
+scikit-learn==1.8.0
+SQLAlchemy==2.0.49
+psycopg2-binary==2.9.12
+pytest==9.0.3
